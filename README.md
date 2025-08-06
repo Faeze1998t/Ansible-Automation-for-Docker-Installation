@@ -1,8 +1,8 @@
 # Ansible-Automation-for-Docker-Installation
+Hi everyone! I'm Faeze 👋
+This repository provides a clean and secure way to Verify Ansible SSH connectivity to a remote Ubuntu server, Install Docker and Docker Compose Use Ansible Vault to keep credentials secure
+🔐 Use Ansible Vault to keep credentials secure
 
-Here’s a clean and professional `README.md` for your GitHub repository that documents how to check Ansible SSH connectivity and install Docker + Docker Compose on a remote Ubuntu server, **without exposing any IPs or passwords**.
-
----
 
 ## 🚀 Ansible Automation for Docker Installation
 
@@ -118,7 +118,77 @@ PLAY RECAP *********************************************************************
 
 ## 🐳 Optional: Install Docker + Docker Compose
 
-To install Docker and Compose using a dedicated playbook, see [`docker-installation.yml`](./playbooks/docker-installation.yml) (create this file based on the main playbook logic).
+```
+---
+- name: Install Docker and Docker Compose on Ubuntu 24.04
+  hosts: new_customer_servers
+  become: true
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required packages for Docker
+      apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - software-properties-common
+        state: present
+
+    - name: Add Docker's official GPG key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Set up the Docker repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename | lower }} stable"
+        state: present
+        filename: docker
+
+    - name: Update apt cache after adding Docker repo
+      apt:
+        update_cache: yes
+
+    - name: Install Docker Engine and Compose plugin
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: latest
+
+    - name: Ensure Docker is started and enabled
+      systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Show Docker version
+      command: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: Show Docker Compose version
+      command: docker compose version
+      register: compose_version
+      changed_when: false
+
+    - name: Display Docker version
+      debug:
+        msg: "{{ docker_version.stdout }}"
+
+    - name: Display Docker Compose version
+      debug:
+        msg: "{{ compose_version.stdout }}"
+
+```
 
  
 
